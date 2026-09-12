@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Científica</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #eef2f7;
+    --calculator: #ffffff;
+    --display: #17202a;
+    --display-text: #ffffff;
+    --button: #f1f3f6;
+    --button-hover: #dfe4ea;
+    --operator: #dbeafe;
+    --operator-text: #1d4ed8;
+    --scientific: #ede9fe;
+    --scientific-text: #6d28d9;
+    --equal: #2563eb;
+    --equal-hover: #1d4ed8;
+    --danger: #fee2e2;
+    --danger-text: #dc2626;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --calculator: #1e293b;
+    --display: #020617;
+    --display-text: #ffffff;
+    --button: #334155;
+    --button-hover: #475569;
+    --operator: #1e3a8a;
+    --operator-text: #bfdbfe;
+    --scientific: #4c1d95;
+    --scientific-text: #ddd6fe;
+    --equal: #2563eb;
+    --equal-hover: #3b82f6;
+    --danger: #450a0a;
+    --danger-text: #fca5a5;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    transition: 0.3s;
+}
+
+.app {
+    width: min(1050px, 100%);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.header h1 {
+    font-size: 25px;
+}
+
+.header p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.theme-btn {
+    width: 45px;
+    height: 45px;
+    border: none;
+    border-radius: 50%;
+    background: var(--calculator);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+}
+
+.main {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+}
+
+.calculator {
+    background: var(--calculator);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.12);
+}
+
+.display {
+    background: var(--display);
+    color: var(--display-text);
+    border-radius: 15px;
+    min-height: 145px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.expression {
+    color: #94a3b8;
+    font-size: 17px;
+    min-height: 25px;
+    text-align: right;
+    word-break: break-all;
+}
+
+.result {
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: bold;
+    text-align: right;
+    margin-top: 8px;
+    word-break: break-all;
+}
+
+.mode-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.mode {
+    display: flex;
+    gap: 6px;
+}
+
+.mode button {
+    border: none;
+    padding: 7px 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--button);
+    color: var(--text);
+    font-weight: bold;
+}
+
+.mode button.active {
+    background: var(--equal);
+    color: white;
+}
+
+.memory {
+    display: flex;
+    gap: 5px;
+}
+
+.memory button {
+    border: none;
+    padding: 7px 9px;
+    border-radius: 7px;
+    cursor: pointer;
+    background: var(--button);
+    color: var(--text);
+    font-size: 12px;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+button.key {
+    border: none;
+    min-height: 54px;
+    border-radius: 11px;
+    background: var(--button);
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .12s;
+}
+
+button.key:hover {
+    background: var(--button-hover);
+    transform: translateY(-1px);
+}
+
+button.key:active {
+    transform: scale(.96);
+}
+
+button.scientific {
+    background: var(--scientific);
+    color: var(--scientific-text);
+}
+
+button.operator {
+    background: var(--operator);
+    color: var(--operator-text);
+}
+
+button.danger {
+    background: var(--danger);
+    color: var(--danger-text);
+}
+
+button.equal {
+    background: var(--equal);
+    color: white;
+}
+
+button.equal:hover {
+    background: var(--equal-hover);
+}
+
+.history {
+    background: var(--calculator);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.10);
+    height: fit-content;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.history-header h2 {
+    font-size: 18px;
+}
+
+.clear-history {
+    border: none;
+    background: transparent;
+    color: var(--danger-text);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.history-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background: var(--button);
+    border-radius: 8px;
+}
+
+.history-expression {
+    font-size: 13px;
+    color: var(--muted);
+    word-break: break-all;
+}
+
+.history-result {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.empty-history {
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 30px 5px;
+}
+
+.help {
+    margin-top: 15px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+}
+
+@media(max-width: 800px) {
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .history {
+        order: 2;
+    }
+
+    .buttons {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media(max-width: 500px) {
+    body {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
+    .calculator {
+        padding: 12px;
+        border-radius: 16px;
+    }
+
+    .buttons {
+        gap: 5px;
+    }
+
+    button.key {
+        min-height: 47px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    .memory button {
+        padding: 6px;
+        font-size: 10px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        <div>
+            <h1>🧮 Calculadora Científica</h1>
+            <p>Calcula expresiones matemáticas de forma rápida y sencilla</p>
+        </div>
+
+        <button class="theme-btn" id="themeBtn" title="Cambiar tema">
+            🌙
+        </button>
+    </div>
+
+    <div class="main">
+
+        <section class="calculator">
+
+            <div class="display">
+                <div class="expression" id="expression"></div>
+                <div class="result" id="result">0</div>
+            </div>
+
+            <div class="mode-row">
+
+                <div class="mode">
+                    <button id="degBtn" class="active">DEG</button>
+                    <button id="radBtn">RAD</button>
+                </div>
+
+                <div class="memory">
+                    <button id="mc">MC</button>
+                    <button id="mr">MR</button>
+                    <button id="mplus">M+</button>
+                    <button id="mminus">M−</button>
+                </div>
+
+            </div>
+
+            <div class="buttons">
+
+                <!-- Fila 1 -->
+                <button class="key danger" data-action="clear">AC</button>
+                <button class="key danger" data-action="backspace">⌫</button>
+                <button class="key operator" data-value="(">(</button>
+                <button class="key operator" data-value=")">)</button>
+                <button class="key scientific" data-value="%">%</button>
+                <button class="key operator" data-value="÷">÷</button>
+
+                <!-- Fila 2 -->
+                <button class="key scientific" data-value="sin(">sin</button>
+                <button class="key scientific" data-value="cos(">cos</button>
+                <button class="key scientific" data-value="tan(">tan</button>
+                <button class="key scientific" data-value="log(">log</button>
+                <button class="key scientific" data-value="ln(">ln</button>
+                <button class="key operator" data-value="×">×</button>
+
+                <!-- Fila 3 -->
+                <button class="key scientific" data-value="asin(">sin⁻¹</button>
+                <button class="key scientific" data-value="acos(">cos⁻¹</button>
+                <button class="key scientific" data-value="atan(">tan⁻¹</button>
+                <button class="key scientific" data-value="sqrt(">√</button>
+                <button class="key scientific" data-value="cbrt(">∛</button>
+                <button class="key operator" data-value="−">−</button>
+
+                <!-- Fila 4 -->
+                <button class="key scientific" data-value="π">π</button>
+                <button class="key scientific" data-value="e">e</button>
+                <button class="key scientific" data-value="^2">x²</button>
+                <button class="key scientific" data-value="^3">x³</button>
+                <button class="key scientific" data-value="^">xʸ</button>
+                <button class="key operator" data-value="+">+</button>
+
+                <!-- Fila 5 -->
+                <button class="key" data-value="7">7</button>
+                <button class="key" data-value="8">8</button>
+                <button class="key" data-value="9">9</button>
+                <button class="key scientific" data-value="!">n!</button>
+                <button class="key scientific" data-value="1/(">
+                    1/x
+                </button>
+                <button class="key scientific" data-value="Ans">ANS</button>
+
+                <!-- Fila 6 -->
+                <button class="key" data-value="4">4</button>
+                <button class="key" data-value="5">5</button>
+                <button class="key" data-value="6">6</button>
+                <button class="key scientific" data-value="abs(">abs</button>
+                <button class="key scientific" data-value="exp(">exp</button>
+                <button class="key equal" data-action="calculate">=</button>
+
+                <!-- Fila 7 -->
+                <button class="key" data-value="1">1</button>
+                <button class="key" data-value="2">2</button>
+                <button class="key" data-value="3">3</button>
+                <button class="key" data-value=".">.</button>
+                <button class="key" data-value="00">00</button>
+                <button class="key" data-value="0">0</button>
+
+            </div>
+
+            <div class="help">
+                También puedes utilizar el teclado: números, +, -, *, /, ^, paréntesis y Enter.
+            </div>
+
+        </section>
+
+        <aside class="history">
+
+            <div class="history-header">
+                <h2>📋 Historial</h2>
+                <button class="clear-history" id="clearHistory">
+                    Limpiar
+                </button>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="empty-history">
+                    No hay operaciones todavía.
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+</div>
+
+<script>
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentExpression = "";
+let lastAnswer = 0;
+let memory = 0;
+let angleMode = "DEG";
+
+const expressionElement = document.getElementById("expression");
+const resultElement = document.getElementById("result");
+const historyList = document.getElementById("historyList");
+
+let history = JSON.parse(localStorage.getItem("calculatorHistory")) || [];
+
+
+/* =========================================================
+   MOSTRAR PANTALLA
+========================================================= */
+
+function updateDisplay() {
+
+    expressionElement.textContent = currentExpression;
+
+    if (currentExpression === "") {
+        resultElement.textContent = "0";
+    }
+}
+
+
+/* =========================================================
+   AGREGAR TEXTO
+========================================================= */
+
+function appendValue(value) {
+
+    if (currentExpression === "Error") {
+        currentExpression = "";
+    }
+
+    currentExpression += value;
+
+    updateDisplay();
+}
+
+
+/* =========================================================
+   BORRAR
+========================================================= */
+
+function clearCalculator() {
+
+    currentExpression = "";
+    resultElement.textContent = "0";
+    expressionElement.textContent = "";
+}
+
+
+/* =========================================================
+   RETROCESO
+========================================================= */
+
+function backspace() {
+
+    if (currentExpression === "Error") {
+        clearCalculator();
+        return;
+    }
+
+    currentExpression = currentExpression.slice(0, -1);
+
+    updateDisplay();
+}
+
+
+/* =========================================================
+   CONVERTIR ÁNGULOS
+========================================================= */
+
+function toRadians(value) {
+
+    return angleMode === "DEG"
+        ? value * Math.PI / 180
+        : value;
+}
+
+
+function fromRadians(value) {
+
+    return angleMode === "DEG"
+        ? value * 180 / Math.PI
+        : value;
+}
+
+
+/* =========================================================
+   FUNCIONES MATEMÁTICAS
+========================================================= */
+
+const functions = {
+
+    sin: x => Math.sin(toRadians(x)),
+    cos: x => Math.cos(toRadians(x)),
+    tan: x => Math.tan(toRadians(x)),
+
+    asin: x => fromRadians(Math.asin(x)),
+    acos: x => fromRadians(Math.acos(x)),
+    atan: x => fromRadians(Math.atan(x)),
+
+    log: x => Math.log10(x),
+    ln: x => Math.log(x),
+
+    sqrt: x => Math.sqrt(x),
+    cbrt: x => Math.cbrt(x),
+
+    abs: x => Math.abs(x),
+    exp: x => Math.exp(x)
+};
+
+
+/* =========================================================
+   TOKENIZADOR
+========================================================= */
+
+function tokenize(expression) {
+
+    const tokens = [];
+
+    let i = 0;
+
+    while (i < expression.length) {
+
+        const char = expression[i];
+
+        if (char === " ") {
+            i++;
+            continue;
+        }
+
+        // Números
+        if (
+            /[0-9.]/.test(char)
+        ) {
+
+            let number = "";
+
+            while (
+                i < expression.length &&
+                /[0-9.eE]/.test(expression[i])
+            ) {
+
+                number += expression[i];
+                i++;
+            }
+
+            if (
+                i < expression.length &&
+                (expression[i] === "+" || expression[i] === "-") &&
+                /[eE]/.test(number[number.length - 1])
+            ) {
+                number += expression[i];
+                i++;
+
+                while (
+                    i < expression.length &&
+                    /[0-9]/.test(expression[i])
+                ) {
+                    number += expression[i];
+                    i++;
+                }
+            }
+
+            tokens.push({
+                type: "number",
+                value: Number(number)
+            });
+
+            continue;
+        }
+
+        // Funciones
+        if (/[a-zA-Z]/.test(char)) {
+
+            let word = "";
+
+            while (
+                i < expression.length &&
+                /[a-zA-Z]/.test(expression[i])
+            ) {
+                word += expression[i];
+                i++;
+            }
+
+            tokens.push({
+                type: "function",
+                value: word
+            });
+
+            continue;
+        }
+
+        // Constantes
+        if (char === "π") {
+
+            tokens.push({
+                type: "number",
+                value: Math.PI
+            });
+
+            i++;
+            continue;
+        }
+
+        if (char === "e") {
+
+            tokens.push({
+                type: "number",
+                value: Math.E
+            });
+
+            i++;
+            continue;
+        }
+
+        // Operadores
+        if ("+-×÷*/^%!".includes(char)) {
+
+            tokens.push({
+                type: "operator",
+                value: char
+            });
+
+            i++;
+            continue;
+        }
+
+        // Paréntesis
+        if (char === "(" || char === ")") {
+
+            tokens.push({
+                type: "paren",
+                value: char
+            });
+
+            i++;
+            continue;
+        }
+
+        throw new Error("Carácter no válido: " + char);
+    }
+
+    return tokens;
+}
+
+
+/* =========================================================
+   PARSER MATEMÁTICO
+========================================================= */
+
+function calculateExpression(expression) {
+
+    expression = expression.replace(/Ans/g, "(" + lastAnswer + ")");
+
+    const tokens = tokenize(expression);
+
+    let position = 0;
+
+
+    function parseExpression() {
+
+        let value = parseTerm();
+
+        while (
+            position < tokens.length &&
+            (
+                tokens[position].value === "+" ||
+                tokens[position].value === "-"
+            )
+        ) {
+
+            const operator = tokens[position++].value;
+
+            const right = parseTerm();
+
+            if (operator === "+")
+                value += right;
+
+            else
+                value -= right;
+        }
+
+        return value;
+    }
+
+
+    function parseTerm() {
+
+        let value = parsePower();
+
+        while (
+            position < tokens.length &&
+            (
+                tokens[position].value === "×" ||
+                tokens[position].value === "*" ||
+                tokens[position].value === "÷" ||
+                tokens[position].value === "/"
+            )
+        ) {
+
+            const operator = tokens[position++].value;
+
+            const right = parsePower();
+
+            if (
+                operator === "×" ||
+                operator === "*"
+            ) {
+                value *= right;
+            }
+            else {
+
+                if (right === 0)
+                    throw new Error("No se puede dividir entre cero");
+
+                value /= right;
+            }
+        }
+
+        return value;
+    }
+
+
+    function parsePower() {
+
+        let value = parseUnary();
+
+        if (
+            position < tokens.length &&
+            tokens[position].value === "^"
+        ) {
+
+            position++;
+
+            const exponent = parsePower();
+
+            value = Math.pow(value, exponent);
+        }
+
+        return value;
+    }
+
+
+    function parseUnary() {
+
+        if (
+            position < tokens.length &&
+            tokens[position].value === "+"
+        ) {
+            position++;
+            return parseUnary();
+        }
+
+        if (
+            position < tokens.length &&
+            tokens[position].value === "-"
+        ) {
+            position++;
+            return -parseUnary();
+        }
+
+        return parsePostfix();
+    }
+
+
+    function parsePostfix() {
+
+        let value = parsePrimary();
+
+        while (position < tokens.length) {
+
+            if (tokens[position].value === "!") {
+
+                position++;
+
+                value = factorial(value);
+
+                continue;
+            }
+
+            if (tokens[position].value === "%") {
+
+                position++;
+
+                value = value / 100;
+
+                continue;
+            }
+
+            break;
+        }
+
+        return value;
+    }
+
+
+    function parsePrimary() {
+
+        if (position >= tokens.length)
+            throw new Error("Expresión incompleta");
+
+        const token = tokens[position];
+
+
+        if (token.type === "number") {
+
+            position++;
+
+            return token.value;
+        }
+
+
+        if (
+            token.type === "paren" &&
+            token.value === "("
+        ) {
+
+            position++;
+
+            const value = parseExpression();
+
+            if (
+                position >= tokens.length ||
+                tokens[position].value !== ")"
+            ) {
+                throw new Error("Falta cerrar paréntesis");
+            }
+
+            position++;
+
+            return value;
+        }
+
+
+        if (token.type === "function") {
+
+            const functionName = token.value;
+
+            position++;
+
+            if (
+                position >= tokens.length ||
+                tokens[position].value !== "("
+            ) {
+                throw new Error(
+                    "La función " + functionName + " necesita paréntesis"
+                );
+            }
+
+            position++;
+
+            const argument = parseExpression();
+
+            if (
+                position >= tokens.length ||
+                tokens[position].value !== ")"
+            ) {
+                throw new Error("Falta cerrar paréntesis");
+            }
+
+            position++;
+
+            if (!functions[functionName])
+                throw new Error("Función desconocida");
+
+            return functions[functionName](argument);
+        }
+
+
+        throw new Error("Expresión inválida");
+    }
+
+
+    const result = parseExpression();
+
+
+    if (position < tokens.length) {
+        throw new Error("Expresión inválida");
+    }
+
+
+    if (!Number.isFinite(result)) {
+        throw new Error("Resultado no válido");
+    }
+
+
+    return result;
+}
+
+
+/* =========================================================
+   FACTORIAL
+========================================================= */
+
+function factorial(number) {
+
+    if (
+        number < 0 ||
+        !Number.isInteger(number)
+    ) {
+        throw new Error(
+            "El factorial requiere un entero positivo"
+        );
+    }
+
+    if (number > 170) {
+        throw new Error("Número demasiado grande");
+    }
+
+    let result = 1;
+
+    for (let i = 2; i <= number; i++) {
+        result *= i;
+    }
+
+    return result;
+}
+
+
+/* =========================================================
+   CALCULAR
+========================================================= */
+
+function calculate() {
+
+    if (!currentExpression)
+        return;
+
+    try {
+
+        const expression = currentExpression;
+
+        const result = calculateExpression(expression);
+
+        lastAnswer = result;
+
+        const formattedResult =
+            formatNumber(result);
+
+        resultElement.textContent = formattedResult;
+
+        addHistory(
+            expression,
+            formattedResult
+        );
+
+    }
+    catch (error) {
+
+        resultElement.textContent = "Error";
+
+        console.error(error);
+    }
+}
+
+
+/* =========================================================
+   FORMATEAR NÚMEROS
+========================================================= */
+
+function formatNumber(number) {
+
+    if (Object.is(number, -0))
+        number = 0;
+
+    if (
+        Math.abs(number) >= 1e12 ||
+        (
+            Math.abs(number) > 0 &&
+            Math.abs(number) < 1e-9
+        )
+    ) {
+        return number.toExponential(8);
+    }
+
+    return Number(
+        number.toPrecision(12)
+    ).toString();
+}
+
+
+/* =========================================================
+   HISTORIAL
+========================================================= */
+
+function addHistory(expression, result) {
+
+    history.unshift({
+        expression,
+        result
+    });
+
+    if (history.length > 50)
+        history.pop();
+
+    localStorage.setItem(
+        "calculatorHistory",
+        JSON.stringify(history)
+    );
+
+    renderHistory();
+}
+
+
+function renderHistory() {
+
+    historyList.innerHTML = "";
+
+    if (history.length === 0) {
+
+        historyList.innerHTML =
+            `<div class="empty-history">
+                No hay operaciones todavía.
+            </div>`;
+
+        return;
+    }
+
+
+    history.forEach(item => {
+
+        const div = document.createElement("div");
+
+        div.className = "history-item";
+
+        div.innerHTML = `
+            <div class="history-expression">
+                ${escapeHTML(item.expression)}
+            </div>
+
+            <div class="history-result">
+                = ${escapeHTML(item.result)}
+            </div>
+        `;
+
+        div.addEventListener("click", () => {
+
+            currentExpression = item.expression;
+
+            resultElement.textContent =
+                item.result;
+
+            updateDisplay();
+        });
+
+        historyList.appendChild(div);
+    });
+}
+
+
+function escapeHTML(text) {
+
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+/* =========================================================
+   BOTONES
+========================================================= */
+
+document
+    .querySelectorAll(".key")
+    .forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const value =
+                button.dataset.value;
+
+            const action =
+                button.dataset.action;
+
+
+            if (action === "clear") {
+
+                clearCalculator();
+                return;
+            }
+
+
+            if (action === "backspace") {
+
+                backspace();
+                return;
+            }
+
+
+            if (action === "calculate") {
+
+                calculate();
+                return;
+            }
+
+
+            if (value) {
+
+                appendValue(value);
+            }
+
+        });
+
+    });
+
+
+/* =========================================================
+   MODOS DEG / RAD
+========================================================= */
+
+const degBtn =
+    document.getElementById("degBtn");
+
+const radBtn =
+    document.getElementById("radBtn");
+
+
+degBtn.addEventListener("click", () => {
+
+    angleMode = "DEG";
+
+    degBtn.classList.add("active");
+    radBtn.classList.remove("active");
+});
+
+
+radBtn.addEventListener("click", () => {
+
+    angleMode = "RAD";
+
+    radBtn.classList.add("active");
+    degBtn.classList.remove("active");
+});
+
+
+/* =========================================================
+   MEMORIA
+========================================================= */
+
+document
+    .getElementById("mc")
+    .addEventListener("click", () => {
+
+        memory = 0;
+    });
+
+
+document
+    .getElementById("mr")
+    .addEventListener("click", () => {
+
+        appendValue(
+            formatNumber(memory)
+        );
+    });
+
+
+document
+    .getElementById("mplus")
+    .addEventListener("click", () => {
+
+        try {
+
+            memory += calculateExpression(
+                currentExpression || "0"
+            );
+
+        } catch {}
+    });
+
+
+document
+    .getElementById("mminus")
+    .addEventListener("click", () => {
+
+        try {
+
+            memory -= calculateExpression(
+                currentExpression || "0"
+            );
+
+        } catch {}
+    });
+
+
+/* =========================================================
+   HISTORIAL
+========================================================= */
+
+document
+    .getElementById("clearHistory")
+    .addEventListener("click", () => {
+
+        history = [];
+
+        localStorage.removeItem(
+            "calculatorHistory"
+        );
+
+        renderHistory();
+    });
+
+
+/* =========================================================
+   TEMA OSCURO
+========================================================= */
+
+const themeBtn =
+    document.getElementById("themeBtn");
+
+
+themeBtn.addEventListener("click", () => {
+
+    document.body.classList.toggle("dark");
+
+    const dark =
+        document.body.classList.contains("dark");
+
+    themeBtn.textContent =
+        dark ? "☀️" : "🌙";
+
+    localStorage.setItem(
+        "calculatorTheme",
+        dark ? "dark" : "light"
+    );
+});
+
+
+if (
+    localStorage.getItem("calculatorTheme")
+    === "dark"
+) {
+
+    document.body.classList.add("dark");
+
+    themeBtn.textContent = "☀️";
+}
+
+
+/* =========================================================
+   TECLADO
+========================================================= */
+
+document.addEventListener("keydown", event => {
+
+    const key = event.key;
+
+
+    if (
+        /[0-9]/.test(key) ||
+        key === "."
+    ) {
+
+        appendValue(key);
+        return;
+    }
+
+
+    if (key === "+") {
+
+        appendValue("+");
+        return;
+    }
+
+
+    if (key === "-") {
+
+        appendValue("−");
+        return;
+    }
+
+
+    if (key === "*") {
+
+        appendValue("×");
+        return;
+    }
+
+
+    if (key === "/") {
+
+        event.preventDefault();
+
+        appendValue("÷");
+        return;
+    }
+
+
+    if (key === "^") {
+
+        appendValue("^");
+        return;
+    }
+
+
+    if (key === "(" || key === ")") {
+
+        appendValue(key);
+        return;
+    }
+
+
+    if (key === "%") {
+
+        appendValue("%");
+        return;
+    }
+
+
+    if (key === "!") {
+
+        appendValue("!");
+        return;
+    }
+
+
+    if (key === "Enter" || key === "=") {
+
+        calculate();
+        return;
+    }
+
+
+    if (key === "Backspace") {
+
+        backspace();
+        return;
+    }
+
+
+    if (key === "Escape") {
+
+        clearCalculator();
+        return;
+    }
+
+});
+
+
+/* =========================================================
+   INICIAR
+========================================================= */
+
+renderHistory();
+updateDisplay();
+
+</script>
+
+</body>
+</html>
